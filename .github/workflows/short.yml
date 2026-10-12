@@ -1,0 +1,50 @@
+name: Produce renovation Short
+on:
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: Repository path to a JSON manifest with six supplied images
+        required: true
+        default: manifests/renovation.json
+        type: string
+permissions:
+  contents: read
+jobs:
+  short:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CUDA_VISIBLE_DEVICES: ""
+      HF_HUB_DISABLE_XET: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      VIDEO_MANIFEST: ${{ inputs.manifest }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-voiceover.txt
+      - name: Install FFmpeg and caption fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+      - name: Validate manifest and supplied assets before model installation
+        run: |
+          python -m pip install 'Pillow==12.3.0'
+          python scripts/produce_short.py --manifest "$VIDEO_MANIFEST" --validate-only
+      - name: Install working Nano CPU dependencies
+        run: bash scripts/setup_voiceover.sh
+      - name: Run unit and FFmpeg integration tests
+        run: python -m unittest discover -s tests -v
+      - name: Produce narration, captions, and MP4
+        run: python scripts/produce_short.py --manifest "$VIDEO_MANIFEST"
+      - name: Upload finished video and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: renovation-short-${{ github.run_id }}
+          path: artifacts/short/
+          if-no-files-found: warn
+          retention-days: 7

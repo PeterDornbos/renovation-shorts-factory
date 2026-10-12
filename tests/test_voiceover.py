@@ -29,23 +29,25 @@ class VoiceoverTests(unittest.TestCase):
 
     def test_generation_saves_wav_and_checks_duration(self):
         import soundfile as sf
-        for seconds, expected in ((17, "passed"), (22, "failed")):
+        for seconds, expected in ((18, "passed"), (22, "passed"), (66, "failed")):
             with self.subTest(seconds=seconds), tempfile.TemporaryDirectory() as tmp:
                 model = MagicMock(sr=24000)
-                model.generate.return_value = torch.full((1, 24000 * seconds), 0.1)
+                model.generate.return_value = torch.full((1, 24000 * seconds // 6), 0.1)
                 module = MagicMock()
                 module.ChatterboxTurboTTS.from_pretrained.return_value = model
                 with patch.object(sys, "argv", ["generate", "--output-dir", tmp]), patch.dict(sys.modules, {"chatterbox.tts_turbo": module}):
                     if expected == "failed":
-                        with self.assertRaisesRegex(RuntimeError, "target is"):
+                        with self.assertRaisesRegex(RuntimeError, "supported duration"):
                             main()
                     else:
                         main()
                 module.ChatterboxTurboTTS.from_pretrained.assert_called_once_with(device="cpu", nano=True)
+                self.assertEqual(model.generate.call_count, 6)
+                self.assertEqual(len(json.loads((Path(tmp) / "timeline.json").read_text())), 6)
                 self.assertEqual(sf.info(Path(tmp) / "renovation.wav").duration, seconds)
                 metrics = json.loads((Path(tmp) / "metrics.json").read_text())
                 self.assertEqual(metrics["status"], expected)
-                self.assertEqual(metrics["duration_in_target"], expected == "passed")
+                self.assertEqual(metrics["duration_in_target"], seconds == 18)
 
     def test_cli_help_does_not_load_model(self):
         result = subprocess.run([sys.executable, "scripts/generate_voiceover.py", "--help"], capture_output=True)
