@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "title": "A kitchen gets a fresh start",
+  "target_duration_seconds": [
+    18,
+    20
+  ],
+  "scenes": [
+    {
+      "image": "../assets/renovation/01.png",
+      "narration": "This dated kitchen is ready for a bright, welcoming start."
+    },
+    {
+      "image": "../assets/renovation/02.png",
+      "narration": "First, we clear the clutter and carefully prepare every surface."
+    },
+    {
+      "image": "../assets/renovation/03.png",
+      "narration": "Fresh cabinet finishes add warmth while keeping the familiar layout."
+    },
+    {
+      "image": "../assets/renovation/04.png",
+      "narration": "New countertops and a clean backsplash give a crisp finish."
+    },
+    {
+      "image": "../assets/renovation/05.png",
+      "narration": "Soft lighting highlights the details and makes everyday cooking inviting."
+    },
+    {
+      "image": "../assets/renovation/06.png",
+      "narration": "Now this refreshed kitchen becomes the welcoming heart of home."
+    }
+  ]
+}
